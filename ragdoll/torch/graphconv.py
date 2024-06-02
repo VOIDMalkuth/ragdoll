@@ -175,7 +175,7 @@ class GraphConv(nn.Module):
                     feat = th.matmul(feat, weight)
                 feat = self.apply_allgather(feat)
                 graph.srcdata['h'] = feat
-                graph.update_all(fn.copy_src(src='h', out='m'),
+                graph.update_all(fn.copy_u('h', 'm'),
                                  fn.sum(msg='m', out='h'))
                 rst = graph.dstdata['h']
                 rst = rst[:self._local_n_nodes, :]
@@ -183,7 +183,7 @@ class GraphConv(nn.Module):
                 # aggregate first then mult W
                 feat = self.apply_allgather(feat)
                 graph.srcdata['h'] = feat
-                graph.update_all(fn.copy_src(src='h', out='m'),
+                graph.update_all(fn.copy_u('h', 'm'),
                                  fn.sum(msg='m', out='h'))
                 rst = graph.dstdata['h']
                 rst = rst[:self._local_n_nodes, :]

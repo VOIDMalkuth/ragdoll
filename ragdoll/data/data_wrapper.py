@@ -8,6 +8,12 @@ class DataWrapper:
             return DataWrapper(None)
         assert hasattr(self.data, attr)
         return DataWrapper(getattr(self.data, attr))
+    
+    def get_item(self, attr):
+        if self.data is None:
+            return DataWrapper(None)
+        assert attr in self.data
+        return DataWrapper(self.data[attr])
 
     # func must have a return value
     def call_func(self, func, *args, **kwargs):

@@ -17,6 +17,8 @@ import torch.nn.functional as F
 from ragdoll.data.datasets import Dataset
 from ragdoll.data.syn_dataset import SynDataset
 
+import pysnooper
+
 
 def setup(rank, world_size, args):
     os.environ['RAGDOLL_USE_MPI'] = '0'
@@ -58,7 +60,7 @@ def evaluate(model, features, labels, mask):
         correct = torch.sum(indices == labels)
         return correct.item() * 1.0 / len(labels), correct.item() * 1.0, len(labels)
 
-
+# @pysnooper.snoop(depth=3)
 def run(rank, world_size, args):
     print('Running DDP on rank', rank, 'world size', world_size)
 

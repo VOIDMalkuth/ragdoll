@@ -1,8 +1,9 @@
 #include <pybind11/pybind11.h>
 #include <torch/extension.h>
-#include <THC/THC.h>
+#include <c10/cuda/CUDAStream.h>
 
 #include <cstdio>
+#include <memory>
 
 #include "glog/logging.h"
 
@@ -10,8 +11,6 @@
 #include "common/operations.h"
 
 namespace ragdoll {
-
-extern THCState *state;
 
 class TorchTensor : public Tensor {
  public:

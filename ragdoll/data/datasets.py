@@ -26,15 +26,20 @@ class Dataset(object):
         data = None
         n_nodes = None
         if self.is_root:
-            data = load_data(args)
-            n_nodes = data.graph.number_of_nodes()
-            if args.dataset == 'reddit':
-                data.graph = data.graph.adjacency_matrix_scipy()
-            else:
-                data.graph = nx.to_scipy_sparse_matrix(data.graph)
+            dgl_graph = load_data(args)[0]
 
-            print('n classes:', data.num_labels)
-            print('feat size', data.features.shape[-1])
+            n_nodes = dgl_graph.number_of_nodes()
+            
+            if args.dataset == 'reddit' or args.dataset == 'cora':
+                graph = dgl_graph.adj_external(scipy_fmt="csr")
+            else:
+                graph = nx.to_scipy_sparse_matrix(dgl_graph)
+
+            data = dgl_graph
+            data.graph = graph
+
+            # print('n classes:', data.num_labels)
+            # print('feat size', data.features.shape[-1])
         data = DataWrapper(data)
         n_nodes = DataWrapper(n_nodes)
 
@@ -69,12 +74,12 @@ class Dataset(object):
         #    subgraph, create_using=nx.DiGraph())
         #print('To nx sparse matrix Done')
         self.graph = subgraph
-
-        features = data.get_attr('features')
-        labels = data.get_attr('labels').call_func('astype', np.int32)
-        train_mask = data.get_attr('train_mask').call_func('astype', np.int32)
-        val_mask = data.get_attr('val_mask').call_func('astype', np.int32)
-        test_mask = data.get_attr('test_mask').call_func('astype', np.int32)
+        features = data.get_attr('ndata').get_item('feat')
+        print(dir(data.get_attr('ndata').get_item('label').data))
+        labels = data.get_attr('ndata').get_item('label').call_func('type', torch.int32)
+        train_mask = data.get_attr('ndata').get_item('train_mask').call_func('type', torch.int32)
+        val_mask = data.get_attr('ndata').get_item('val_mask').call_func('type', torch.int32)
+        test_mask = data.get_attr('ndata').get_item('test_mask').call_func('type', torch.int32)
 
         if self.is_root:
             print('feature shape is', features.get_val().shape)
@@ -112,4 +117,4 @@ class Dataset(object):
         #        g.remove_edges_from(nx.selfloop_edges(g))
         #        g.add_edges_from(zip(g.nodes(), g.nodes()))
         g = DGLGraph(g)
-        self.graph = g
+        self.graph = g.to("cuda")

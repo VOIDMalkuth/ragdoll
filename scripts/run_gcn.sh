@@ -41,7 +41,7 @@ fi
 # check dataset
 # dataset \in {webgoogle, reddit, wiki-talk, com-orkut}
 
-if [ "$dataset" != "webgoogle" ] && [ "$dataset" != "reddit" ] && [ "$dataset" != "wiki-talk" ] && [ "$dataset" != "com-orkut" ]; then
+if [ "$dataset" != "webgoogle" ] && [ "$dataset" != "reddit" ] && [ "$dataset" != "wiki-talk" ] && [ "$dataset" != "com-orkut" ] && [ "$dataset" != "cora" ]; then
     echo " Dataset must in {webgoogle, reddit, wiki-talk, com-orkut} "
     display_usage
     exit 1
@@ -60,6 +60,9 @@ fi
 if [ "$dataset" == "reddit" ]; then
     feat_size=602
     n_hidden=256
+elif [ "$dataset" == "cora" ]; then
+    feat_size=512
+    n_hidden=512
 elif [ "$dataset" == "com-orkut" ]; then
     feat_size=128
     n_hidden=128
@@ -74,12 +77,22 @@ export GCCL_CONFIG=${gccl_config_dir}/gpu${n}.json
 export GLOG_log_dir=./logs
 
 
+feat_size=128
+n_hidden=128
 
-python examples/train_gcn.py --dataset reddit --self-loop --world_size $n\
+echo python3 examples/train_gcn.py --dataset $dataset --self-loop --world_size $n\
   --comm=$comm \
   --feat_size=${feat_size} \
   --n-layers=${n_layers} \
   --n-hidden=${n_hidden} \
-  --n-epochs 10 --feat_size=${feat_size}\
-  --input_graph=${graph} \
-  --cached_dir=${cached_dir}
+  --n-epochs 10 --feat_size=${feat_size}
+
+# reddit
+python3 examples/train_gcn.py --dataset $dataset --self-loop --world_size $n\
+  --comm=$comm \
+  --feat_size=${feat_size} \
+  --n-layers=${n_layers} \
+  --n-hidden=${n_hidden} \
+  --n-epochs 100 --feat_size=${feat_size}
+#   --input_graph=${graph}
+#   --cached_dir=${cached_dir}
