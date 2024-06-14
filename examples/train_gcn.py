@@ -100,9 +100,10 @@ def run(rank, world_size, args):
     for epoch in range(args.n_epochs):
         print('Epoch {} -------------'.format(epoch))
         model.train()
-        torch.distributed.barrier()
         if epoch >= 3:
             t0 = time.time()
+        # print(features)
+        torch.distributed.barrier()
 
         logits = model(features)
         loss = loss_fcn(logits[train_mask], labels[train_mask])

@@ -16,7 +16,7 @@ namespace ragdoll {
 GlobalState global_state;
 
 // Always use MPI_COMM_WORLD for communication
-void RagdollMPIInit() {
+void RagdollMPIInit(int device_id) {
   LOG(INFO) << "Initializing ragdoll using MPI";
   MPI_Init(nullptr, nullptr);
   int rank, world_size;
@@ -29,13 +29,13 @@ void RagdollMPIInit() {
   if (rank == 0) id = gccl::GetUniqueId();
   MPI_Bcast((void *)&id, sizeof(gccl::gcclUniqueId), MPI_BYTE, 0,
             MPI_COMM_WORLD);
-  gccl::CommInitRank(&global_state.comm, world_size, id, rank);
+  gccl::CommInitRank(&global_state.comm, world_size, id, rank, device_id);
 
   global_state.device_id = gccl::GetDeviceId(global_state.comm);
   global_state.initialized = true;
   LOG(INFO) << "Finished initialization";
 }
-void RagdollEnvInit() {
+void RagdollEnvInit(int device_id) {
   LOG(INFO) << "Initializing ragdoll using env variables";
   int rank = GetEnvParam<int>("RANK");
   int world_size = GetEnvParam<int>("WORLD_SIZE");
@@ -44,18 +44,18 @@ void RagdollEnvInit() {
   global_state.rank = rank;
   global_state.n_peers = world_size;
   gccl::gcclUniqueId id = gccl::GetUniqueId(master.c_str(), port, rank == 0);
-  gccl::CommInitRank(&global_state.comm, world_size, id, rank);
+  gccl::CommInitRank(&global_state.comm, world_size, id, rank, device_id);
   global_state.device_id = gccl::GetDeviceId(global_state.comm);
   global_state.initialized = true;
   LOG(INFO) << "Finished initialization";
 }
 
-void RagdollInit() {
+void RagdollInit(int device_id) {
   if (global_state.initialized) return;
   if (GetEnvParam("USE_MPI", 1) == 1) {
-    RagdollMPIInit();
+    RagdollMPIInit(device_id);
   } else {
-    RagdollEnvInit();
+    RagdollEnvInit(device_id);
   }
 }
 
@@ -117,7 +117,7 @@ extern "C" {
 
 void ragdoll_hello() { printf("Hello\n"); }
 
-void ragdoll_init() { RagdollInit(); }
+void ragdoll_init(int device_id) { RagdollInit(device_id); }
 void ragdoll_init_logs(const char *file) { RagdollInitLogs(file); }
 int ragdoll_rank() { return RagdollRank(); }
 int ragdoll_device_id() { return RagdollDeviceId(); }

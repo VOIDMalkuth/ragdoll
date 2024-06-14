@@ -37,8 +37,8 @@ class RagdollCore(object):
         log_file = log_file.encode('utf-8')
         self.lib.ragdoll_init_logs(log_file)
 
-    def init(self):
-        self.lib.ragdoll_init()
+    def init(self, device_id=-1):
+        self.lib.ragdoll_init(device_id)
 
     def rank(self):
         return self.lib.ragdoll_rank()

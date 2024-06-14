@@ -1,3 +1,3 @@
 #include "common/operations.h"
 
-int main() { ragdoll::ragdoll_init(); }
+int main() { ragdoll::ragdoll_init(0); }
