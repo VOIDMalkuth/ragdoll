@@ -77,10 +77,10 @@ export GCCL_CONFIG=${gccl_config_dir}/gpu${n}.json
 export GLOG_log_dir=./logs
 
 
-feat_size=128
+feat_size=300
 n_hidden=128
 
-echo python3 examples/train_gcn.py --dataset $dataset --self-loop --world_size $n\
+echo python3 -u examples/train_gcn.py --dataset $dataset --self-loop --world_size $n\
   --comm=$comm \
   --feat_size=${feat_size} \
   --n-layers=${n_layers} \
@@ -88,7 +88,7 @@ echo python3 examples/train_gcn.py --dataset $dataset --self-loop --world_size $
   --n-epochs 10 --feat_size=${feat_size}
 
 # reddit
-python3 examples/train_gcn.py --dataset $dataset --self-loop --world_size $n\
+python3 -u examples/train_gcn.py --dataset $dataset --self-loop --world_size $n\
   --comm=$comm \
   --feat_size=${feat_size} \
   --n-layers=${n_layers} \

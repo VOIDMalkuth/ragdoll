@@ -1,8 +1,11 @@
 import ctypes
 import pathlib
 import sysconfig
+import time
 import numpy as np
+import torch
 
+from ragdoll.perf_counter import perf_counter
 
 
 def get_ext_suffix():
@@ -85,24 +88,44 @@ class RagdollCore(object):
         return sg_n.value, py_sg_xadj, py_sg_adjncy
 
     def dispatch_float(self, t, feat_size, local_n_nodes, no_remote=0):
+        perf_counter.record_start("dispatch_float_py")
         if t is None:
             t = np.array([])
-        t = t.ravel().tolist()
-        c_ptr = (ctypes.c_float * len(t))(*t)
+        if isinstance(t, torch.Tensor):
+            t = t.numpy()
+        # t = t.ravel().tolist()
+        # c_ptr = (ctypes.c_float * len(t))(*t)
+        c_ptr = t.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
         local_data = (ctypes.c_float * (local_n_nodes * feat_size))()
+
+        perf_counter.record_start("dispatch_float_c")
         self.lib.ragdoll_dispatch_float(
             c_ptr, feat_size, local_n_nodes, local_data, no_remote)
-        return [local_data[v] for v in range(local_n_nodes * feat_size)]
+        perf_counter.record_end("dispatch_float_c")
+        
+        dispatch_res = [local_data[v] for v in range(local_n_nodes * feat_size)]
+        perf_counter.record_end("dispatch_float_py")
+        return dispatch_res
 
     def dispatch_int(self, t, feat_size, local_n_nodes, no_remote=0):
+        perf_counter.record_start("dispatch_int_py")
+
         if t is None:
             t = np.array([])
-        t = t.ravel().tolist()
-        c_ptr = (ctypes.c_int * len(t))(*t)
+        if isinstance(t, torch.Tensor):
+            t = t.numpy()
+        # t = t.ravel().tolist()
+        # c_ptr = (ctypes.c_int * len(t))(*t)
+        c_ptr = t.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
         local_data = (ctypes.c_int * (local_n_nodes * feat_size))()
+        perf_counter.record_start("dispatch_int_c")
         self.lib.ragdoll_dispatch_float(
             c_ptr, feat_size, local_n_nodes, local_data, no_remote)
-        return [local_data[v] for v in range(local_n_nodes * feat_size)]
+        perf_counter.record_end("dispatch_int_c")
+        dispatch_res = [local_data[v] for v in range(local_n_nodes * feat_size)]
+
+        perf_counter.record_end("dispatch_int_py")
+        return dispatch_res
 
     def get_local_n_nodes(self):
         return self.lib.ragdoll_get_local_n_nodes()

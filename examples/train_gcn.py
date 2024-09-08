@@ -14,6 +14,7 @@ import torch
 from torch.nn.parallel import DistributedDataParallel as DDP
 from gcn import GCN
 import torch.nn.functional as F
+from ragdoll.perf_counter import perf_counter
 from ragdoll.data.datasets import Dataset
 from ragdoll.data.syn_dataset import SynDataset
 
@@ -64,14 +65,19 @@ def evaluate(model, features, labels, mask):
 def run(rank, world_size, args):
     print('Running DDP on rank', rank, 'world size', world_size)
 
+    perf_counter.record_start("setup")
     setup(rank, world_size, args)
     dev_id = ragdoll.device_id()
+    perf_counter.record_end("setup")
 
+    perf_counter.record_start("load_data")
     if len(args.input_graph) > 0 or len(args.cached_dir) > 0:
         data = SynDataset(rank == 0, args)
     else:
         data = Dataset(rank == 0, args)
+    perf_counter.record_end("load_data")
 
+    perf_counter.record_start("setup_py")
     feat_size = args.feat_size
 
     features = torch.FloatTensor(data.features).cuda()
@@ -94,6 +100,9 @@ def run(rank, world_size, args):
                                  lr=args.lr,
                                  weight_decay=args.weight_decay)
     optimizer.zero_grad()
+
+    perf_counter.record_end("setup_py")
+    perf_counter.summary()
 
     dur = []
     print("Start training... for {} epochs".format(args.n_epochs))
@@ -165,8 +174,8 @@ def SetArgs(args):
         args.feat_size = 500
         args.n_classes = 3
     elif args.dataset == 'reddit':
-        args.feat_size = 602
-        args.n_classes = 41
+        # args.feat_size = 300
+        args.n_classes = 16
     else:
         assert False
 
