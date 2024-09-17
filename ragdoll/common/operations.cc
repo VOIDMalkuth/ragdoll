@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstring>
 #include <memory>
+#include <iostream>
 
 #include "gccl.h"
 #include "glog/logging.h"
@@ -57,6 +58,23 @@ void RagdollInit(int device_id) {
   } else {
     RagdollEnvInit(device_id);
   }
+}
+
+void RagdollDeinit() {
+  if (!global_state.initialized) return;
+
+  gccl::FreeCommInfo(global_state.info);
+  global_state.info = nullptr;
+
+  gccl::CommDestroy(global_state.comm);
+  global_state.comm = nullptr;
+
+  if (GetEnvParam("USE_MPI", 1) == 1) {
+    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Finalize();
+  }
+
+  global_state.initialized = false;
 }
 
 void RagdollPartitionGraph(int n_nodes, int *xadj, int *adjncy, int *sgn,
@@ -118,6 +136,7 @@ extern "C" {
 void ragdoll_hello() { printf("Hello\n"); }
 
 void ragdoll_init(int device_id) { RagdollInit(device_id); }
+void ragdoll_deinit() { RagdollDeinit(); }
 void ragdoll_init_logs(const char *file) { RagdollInitLogs(file); }
 int ragdoll_rank() { return RagdollRank(); }
 int ragdoll_device_id() { return RagdollDeviceId(); }

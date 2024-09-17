@@ -16,6 +16,7 @@ core = RagdollCore()
 # ctypes
 hello = core.hello
 init = core.init
+deinit = core.deinit
 set_comm_pattern=core.set_comm_pattern
 init_logs = core.init_logs
 rank = core.rank

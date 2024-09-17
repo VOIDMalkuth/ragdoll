@@ -14,6 +14,7 @@ extern "C" {
 __attribute__((visibility("default"))) void ragdoll_hello();
 
 __attribute__((visibility("default"))) void ragdoll_init(int device_id);
+__attribute__((visibility("default"))) void ragdoll_deinit();
 
 __attribute__((visibility("default"))) void ragdoll_init_logs(const char *file);
 

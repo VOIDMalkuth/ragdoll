@@ -36,6 +36,11 @@ def setup(rank, world_size, args):
     logs_name = 'GCCL.RANK.' + str(rank)
     ragdoll.init_logs(logs_name)
     ragdoll.init()
+    # print("De init")
+    # ragdoll.deinit()
+    # print("Re init")
+    # ragdoll.init()
+
     ragdoll.set_comm_pattern(args.comm)
 
     dev_id = ragdoll.device_id()

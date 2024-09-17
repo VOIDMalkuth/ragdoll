@@ -42,6 +42,9 @@ class RagdollCore(object):
 
     def init(self, device_id=-1):
         self.lib.ragdoll_init(device_id)
+        
+    def deinit(self):
+        self.lib.ragdoll_deinit()
 
     def rank(self):
         return self.lib.ragdoll_rank()
