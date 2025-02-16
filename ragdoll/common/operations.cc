@@ -102,6 +102,7 @@ int RagdollRank() {
 }
 
 void RagdollInitLogs(const char *file) { gccl::InitLogs(file); }
+void RagdollDeInitLogs() { gccl::DeInitLogs(); }
 
 int RagdollDeviceId() {
   CHECK(global_state.initialized)
@@ -138,6 +139,7 @@ void ragdoll_hello() { printf("Hello\n"); }
 void ragdoll_init(int device_id) { RagdollInit(device_id); }
 void ragdoll_deinit() { RagdollDeinit(); }
 void ragdoll_init_logs(const char *file) { RagdollInitLogs(file); }
+void ragdoll_deinit_logs() { RagdollDeInitLogs(); }
 int ragdoll_rank() { return RagdollRank(); }
 int ragdoll_device_id() { return RagdollDeviceId(); }
 int ragdoll_world_size() { return RagdollWorldSize(); }

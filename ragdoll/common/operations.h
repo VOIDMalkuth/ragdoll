@@ -17,6 +17,7 @@ __attribute__((visibility("default"))) void ragdoll_init(int device_id);
 __attribute__((visibility("default"))) void ragdoll_deinit();
 
 __attribute__((visibility("default"))) void ragdoll_init_logs(const char *file);
+__attribute__((visibility("default"))) void ragdoll_deinit_logs();
 
 __attribute__((visibility("default"))) int ragdoll_rank();
 __attribute__((visibility("default"))) int ragdoll_device_id();

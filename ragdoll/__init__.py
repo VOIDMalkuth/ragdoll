@@ -19,6 +19,7 @@ init = core.init
 deinit = core.deinit
 set_comm_pattern=core.set_comm_pattern
 init_logs = core.init_logs
+deinit_logs = core.deinit_logs
 rank = core.rank
 device_id = core.device_id
 world_size = core.world_size
