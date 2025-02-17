@@ -25,6 +25,7 @@ device_id = core.device_id
 world_size = core.world_size
 partition_graph = core.partition_graph
 partition_graph_on_dir = core.partition_graph_on_dir
+local_graph_detailed_info = core.local_graph_detailed_info
 dispatch_float = core.dispatch_float
 dispatch_int = core.dispatch_int
 get_local_n_nodes = core.get_local_n_nodes

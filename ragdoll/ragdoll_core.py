@@ -92,6 +92,25 @@ class RagdollCore(object):
         self.lib.ragdoll_release(sg_xadj)
         self.lib.ragdoll_release(sg_adjncy)
         return sg_n.value, py_sg_xadj, py_sg_adjncy
+    
+    def local_graph_detailed_info(self):
+        global_nodes = ctypes.c_int32()
+        local_owned_nodes = ctypes.c_int32()
+        remote_owned_nodes = ctypes.c_int32()
+        graph_parts = ctypes.POINTER(ctypes.c_int)()
+        my_local_to_remote_mapping = ctypes.POINTER(ctypes.c_int)()
+
+        self.lib.ragdoll_local_graph_detailed_info(ctypes.byref(global_nodes), ctypes.byref(local_owned_nodes),
+                                                ctypes.byref(remote_owned_nodes), ctypes.byref(graph_parts), ctypes.byref(my_local_to_remote_mapping))
+
+        py_global_nodes = global_nodes.value
+        py_local_owned_nodes = local_owned_nodes.value
+        py_remote_owned_nodes = remote_owned_nodes.value
+        py_graph_parts = [graph_parts[i] for i in range(py_global_nodes)]
+        py_my_local_to_remote_mapping = [my_local_to_remote_mapping[i] for i in range(py_local_owned_nodes + py_remote_owned_nodes)]
+        self.lib.ragdoll_release(graph_parts)
+        self.lib.ragdoll_release(my_local_to_remote_mapping)
+        return py_global_nodes, py_local_owned_nodes, py_remote_owned_nodes, py_graph_parts, py_my_local_to_remote_mapping
 
     def dispatch_float(self, t, feat_size, local_n_nodes, no_remote=0):
         perf_counter.record_start("dispatch_float_py")
