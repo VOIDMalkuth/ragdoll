@@ -95,10 +95,9 @@ void RagdollPartitionGraphOnDir(const char *dirname, int *sgn, int **sg_xadj,
                        sg_xadj, sg_adjncy);
 }
 
-void RagdollLocalGraphDetailedInfo(int *global_nodes, int *local_owned_nodes, int *remote_owned_nodes,
-                                   int **graph_parts, int **my_local_to_remote_mapping) {
-  gccl::LocalGraphDetailedInfo(global_state.comm, global_nodes, local_owned_nodes, remote_owned_nodes, graph_parts, my_local_to_remote_mapping);
+void RagdollGraphDetailedInfo(int **gid2pid, int **num_local_nodes, int **gid2lid_unordered) {
   CHECK(global_state.initialized) << "Cannot get LocalGraphDetailedInfo because ragdoll is not initialized";
+  gccl::GraphDetailedInfo(global_state.comm, gid2pid, num_local_nodes, gid2lid_unordered);
 }
 
 int RagdollRank() {
@@ -159,10 +158,8 @@ void ragdoll_partition_graph_on_dir(const char *dirname, int *sgn,
   RagdollPartitionGraphOnDir(dirname, sgn, sg_xadj, sg_adjncy);
 }
 
-void ragdoll_local_graph_detailed_info(int *global_nodes, int *local_owned_nodes, int *remote_owned_nodes,
-                                   int **graph_parts, int **my_local_to_remote_mapping) {
-    RagdollLocalGraphDetailedInfo(global_nodes, local_owned_nodes, remote_owned_nodes,
-                                  graph_parts, my_local_to_remote_mapping);
+void ragdoll_graph_detailed_info(int **gid2pid, int **num_local_nodes, int **gid2lid_unordered) {
+    RagdollGraphDetailedInfo(gid2pid, num_local_nodes, gid2lid_unordered);
 }
 
 void ragdoll_release(int *ptr) { RagdollRelease(ptr); }

@@ -30,9 +30,8 @@ __attribute__((visibility("default"))) void ragdoll_partition_graph(
 __attribute__((visibility("default"))) void ragdoll_partition_graph_on_dir(
     const char *dirname, int *sgn, int **sg_xadj, int **sg_adjncy);
 
-__attribute__((visibility("default"))) void ragdoll_local_graph_detailed_info(
-    int *global_nodes, int *local_owned_nodes, int *remote_owned_nodes,
-    int **graph_parts, int **my_local_to_remote_mapping);
+__attribute__((visibility("default"))) void ragdoll_graph_detailed_info(
+    int **gid2pid, int **num_local_nodes, int **gid2lid_unordered);
 
 __attribute__((visibility("default"))) void ragdoll_release(int *ptr);
 

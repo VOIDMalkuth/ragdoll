@@ -93,24 +93,26 @@ class RagdollCore(object):
         self.lib.ragdoll_release(sg_adjncy)
         return sg_n.value, py_sg_xadj, py_sg_adjncy
     
-    def local_graph_detailed_info(self):
-        global_nodes = ctypes.c_int32()
-        local_owned_nodes = ctypes.c_int32()
-        remote_owned_nodes = ctypes.c_int32()
-        graph_parts = ctypes.POINTER(ctypes.c_int)()
-        my_local_to_remote_mapping = ctypes.POINTER(ctypes.c_int)()
+    def graph_detailed_info(self, n_nodes, world_size):
+        gid2pid_c = ctypes.POINTER(ctypes.c_int)()
+        num_local_nodes_c = ctypes.POINTER(ctypes.c_int)()
+        gid2lid_unordered_c = ctypes.POINTER(ctypes.c_int)()
 
-        self.lib.ragdoll_local_graph_detailed_info(ctypes.byref(global_nodes), ctypes.byref(local_owned_nodes),
-                                                ctypes.byref(remote_owned_nodes), ctypes.byref(graph_parts), ctypes.byref(my_local_to_remote_mapping))
+        self.lib.ragdoll_graph_detailed_info(ctypes.byref(gid2pid_c), ctypes.byref(num_local_nodes_c), ctypes.byref(gid2lid_unordered_c))
 
-        py_global_nodes = global_nodes.value
-        py_local_owned_nodes = local_owned_nodes.value
-        py_remote_owned_nodes = remote_owned_nodes.value
-        py_graph_parts = [graph_parts[i] for i in range(py_global_nodes)]
-        py_my_local_to_remote_mapping = [my_local_to_remote_mapping[i] for i in range(py_local_owned_nodes + py_remote_owned_nodes)]
-        self.lib.ragdoll_release(graph_parts)
-        self.lib.ragdoll_release(my_local_to_remote_mapping)
-        return py_global_nodes, py_local_owned_nodes, py_remote_owned_nodes, py_graph_parts, py_my_local_to_remote_mapping
+        gid2pid = torch.from_numpy(np.ctypeslib.as_array(gid2pid_c, shape=(n_nodes,))).clone()
+        num_local_nodes = torch.from_numpy(np.ctypeslib.as_array(num_local_nodes_c, shape=(world_size,))).clone()
+        gid2lid_unordered = torch.from_numpy(np.ctypeslib.as_array(gid2lid_unordered_c, shape=(n_nodes, 2))).clone()
+        self.lib.ragdoll_release(gid2pid_c)
+        self.lib.ragdoll_release(num_local_nodes_c)
+        self.lib.ragdoll_release(gid2lid_unordered_c)
+
+        gid2lid_sorted_key = torch.argsort(gid2lid_unordered[:, 0].view(-1), stable=True)
+        gid2lid = torch.gather(gid2lid_unordered[:, 1].view(-1), 0, gid2lid_sorted_key)
+
+        print(gid2pid, num_local_nodes, gid2lid)
+        
+        return gid2pid, num_local_nodes, gid2lid
 
     def dispatch_float(self, t, feat_size, local_n_nodes, no_remote=0):
         perf_counter.record_start("dispatch_float_py")
