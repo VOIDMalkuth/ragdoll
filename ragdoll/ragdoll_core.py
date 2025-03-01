@@ -58,14 +58,35 @@ class RagdollCore(object):
     def world_size(self):
         return self.lib.ragdoll_world_size()
 
-    def partition_graph(self, n_nodes, xadj, adjncy):
+    def partition_graph(self, n_nodes, xadj, adjncy, mini_graph_info=None):
         c_xadj = (ctypes.c_int * len(xadj))(*xadj)
         c_adjncy = (ctypes.c_int * len(adjncy))(*adjncy)
         sg_n = ctypes.c_int32()
         sg_xadj = ctypes.POINTER(ctypes.c_int)()
         sg_adjncy = ctypes.POINTER(ctypes.c_int)()
+        
+        if mini_graph_info is not None:
+            mini_n = mini_graph_info['n']
+            mini_xadj = mini_graph_info['xadj']
+            mini_adjncy = mini_graph_info['adjncy']
+            mini_gid2mid = mini_graph_info['gid2mid']
+            mini_node_weights = mini_graph_info['node_weights'].to(int)
+            mini_edge_weights = mini_graph_info['edge_weights'].to(int)
+            c_mini_xadj = (ctypes.c_int * len(mini_xadj))(*mini_xadj)
+            c_mini_adjncy = (ctypes.c_int * len(mini_adjncy))(*mini_adjncy)
+            c_mini_gid2mid = (ctypes.c_int * len(mini_gid2mid))(*mini_gid2mid)
+            c_mini_node_weights = (ctypes.c_int * len(mini_node_weights))(*mini_node_weights)
+            c_mini_edge_weights = (ctypes.c_int * len(mini_edge_weights))(*mini_edge_weights)
+        else:
+            mini_n = 0
+            c_mini_xadj = ctypes.POINTER(ctypes.c_int)()
+            c_mini_adjncy = ctypes.POINTER(ctypes.c_int)()
+            c_mini_gid2mid = ctypes.POINTER(ctypes.c_int)()
+            c_mini_node_weights = ctypes.POINTER(ctypes.c_float)()
+            c_mini_edge_weights = ctypes.POINTER(ctypes.c_float)()
+        
         self.lib.ragdoll_partition_graph(n_nodes, c_xadj, c_adjncy, ctypes.byref(
-            sg_n), ctypes.byref(sg_xadj), ctypes.byref(sg_adjncy))
+            sg_n), ctypes.byref(sg_xadj), ctypes.byref(sg_adjncy), mini_n, c_mini_xadj, c_mini_adjncy, c_mini_gid2mid, c_mini_node_weights, c_mini_edge_weights)
 
         n_edges = sg_xadj[sg_n.value]
         print('Subgraph nodes:', sg_n.value, 'local nodes',

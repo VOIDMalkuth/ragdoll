@@ -78,12 +78,13 @@ void RagdollDeinit() {
 }
 
 void RagdollPartitionGraph(int n_nodes, int *xadj, int *adjncy, int *sgn,
-                           int **sg_xadj, int **sg_adjncy) {
+                           int **sg_xadj, int **sg_adjncy,
+                           int mini_n, int *mini_xadj, int *mini_adjncy, int *mini_gid2mid, int *mini_node_weights, int *mini_edge_weights) {
   if (global_state.info != nullptr) {
     gccl::FreeCommInfo(global_state.info);
   }
   gccl::PartitionGraph(global_state.comm, n_nodes, xadj, adjncy,
-                       &global_state.info, sgn, sg_xadj, sg_adjncy);
+                       &global_state.info, sgn, sg_xadj, sg_adjncy, mini_n, mini_xadj, mini_adjncy, mini_gid2mid, mini_node_weights, mini_edge_weights);
 }
 
 void RagdollPartitionGraphOnDir(const char *dirname, int *sgn, int **sg_xadj,
@@ -150,8 +151,9 @@ int ragdoll_device_id() { return RagdollDeviceId(); }
 int ragdoll_world_size() { return RagdollWorldSize(); }
 
 void ragdoll_partition_graph(int n_nodes, int *xadj, int *adjncy, int *sgn,
-                             int **sg_xadj, int **sg_adjncy) {
-  RagdollPartitionGraph(n_nodes, xadj, adjncy, sgn, sg_xadj, sg_adjncy);
+                             int **sg_xadj, int **sg_adjncy,
+                             int mini_n, int *mini_xadj, int *mini_adjncy, int *mini_gid2mid, int *mini_node_weights, int *mini_edge_weights) {
+  RagdollPartitionGraph(n_nodes, xadj, adjncy, sgn, sg_xadj, sg_adjncy, mini_n, mini_xadj, mini_adjncy, mini_gid2mid, mini_node_weights, mini_edge_weights);
 }
 void ragdoll_partition_graph_on_dir(const char *dirname, int *sgn,
                                     int **sg_xadj, int **sg_adjncy) {

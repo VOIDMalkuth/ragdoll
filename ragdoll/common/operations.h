@@ -24,8 +24,8 @@ __attribute__((visibility("default"))) int ragdoll_device_id();
 __attribute__((visibility("default"))) int ragdoll_world_size();
 
 __attribute__((visibility("default"))) void ragdoll_partition_graph(
-    int n_nodes, int *xadj, int *adjncy, int *sgn, int **sg_xadj,
-    int **sg_adjncy);
+    int n_nodes, int *xadj, int *adjncy, int *sgn, int **sg_xadj, int **sg_adjncy,
+    int mini_n, int *mini_xadj, int *mini_adjncy, int *mini_gid2mid, int *mini_node_weights, int *mini_edge_weights);
 
 __attribute__((visibility("default"))) void ragdoll_partition_graph_on_dir(
     const char *dirname, int *sgn, int **sg_xadj, int **sg_adjncy);
