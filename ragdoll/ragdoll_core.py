@@ -59,8 +59,12 @@ class RagdollCore(object):
         return self.lib.ragdoll_world_size()
 
     def partition_graph(self, n_nodes, xadj, adjncy, mini_graph_info=None):
-        c_xadj = (ctypes.c_int * len(xadj))(*xadj)
-        c_adjncy = (ctypes.c_int * len(adjncy))(*adjncy)
+        if isinstance(xadj, list):
+            c_xadj = (ctypes.c_int * len(xadj))(*xadj)
+            c_adjncy = (ctypes.c_int * len(adjncy))(*adjncy)
+        else:
+            c_xadj = xadj.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
+            c_adjncy = adjncy.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
         sg_n = ctypes.c_int32()
         sg_xadj = ctypes.POINTER(ctypes.c_int)()
         sg_adjncy = ctypes.POINTER(ctypes.c_int)()
@@ -70,13 +74,18 @@ class RagdollCore(object):
             mini_xadj = mini_graph_info['xadj']
             mini_adjncy = mini_graph_info['adjncy']
             mini_gid2mid = mini_graph_info['gid2mid']
-            mini_node_weights = mini_graph_info['node_weights'].to(int)
-            mini_edge_weights = mini_graph_info['edge_weights'].to(int)
-            c_mini_xadj = (ctypes.c_int * len(mini_xadj))(*mini_xadj)
-            c_mini_adjncy = (ctypes.c_int * len(mini_adjncy))(*mini_adjncy)
-            c_mini_gid2mid = (ctypes.c_int * len(mini_gid2mid))(*mini_gid2mid)
-            c_mini_node_weights = (ctypes.c_int * len(mini_node_weights))(*mini_node_weights)
-            c_mini_edge_weights = (ctypes.c_int * len(mini_edge_weights))(*mini_edge_weights)
+            mini_node_weights = mini_graph_info['node_weights']
+            mini_edge_weights = mini_graph_info['edge_weights']
+            # c_mini_xadj = (ctypes.c_int * len(mini_xadj))(*mini_xadj)
+            # c_mini_adjncy = (ctypes.c_int * len(mini_adjncy))(*mini_adjncy)
+            # c_mini_gid2mid = (ctypes.c_int * len(mini_gid2mid))(*mini_gid2mid)
+            # c_mini_node_weights = (ctypes.c_int * len(mini_node_weights))(*mini_node_weights)
+            # c_mini_edge_weights = (ctypes.c_int * len(mini_edge_weights))(*mini_edge_weights)
+            c_mini_xadj = mini_xadj.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
+            c_mini_adjncy = mini_adjncy.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
+            c_mini_gid2mid = mini_gid2mid.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
+            c_mini_node_weights = mini_node_weights.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
+            c_mini_edge_weights = mini_edge_weights.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
         else:
             mini_n = 0
             c_mini_xadj = ctypes.POINTER(ctypes.c_int)()
@@ -91,8 +100,12 @@ class RagdollCore(object):
         n_edges = sg_xadj[sg_n.value]
         print('Subgraph nodes:', sg_n.value, 'local nodes',
               self.lib.ragdoll_get_local_n_nodes(), 'edges:', n_edges)
-        py_sg_xadj = [sg_xadj[i] for i in range(sg_n.value + 1)]
-        py_sg_adjncy = [sg_adjncy[i] for i in range(n_edges)]
+        
+        py_sg_xadj = np.ctypeslib.as_array(sg_xadj, shape=(sg_n.value + 1,)).copy()
+        py_sg_adjncy = np.ctypeslib.as_array(sg_adjncy, shape=(n_edges,)).copy()
+        
+        print("Finished converting to numpy")
+        
         self.lib.ragdoll_release(sg_xadj)
         self.lib.ragdoll_release(sg_adjncy)
         return sg_n.value, py_sg_xadj, py_sg_adjncy
