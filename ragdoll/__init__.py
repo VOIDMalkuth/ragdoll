@@ -29,6 +29,8 @@ graph_detailed_info = core.graph_detailed_info
 dispatch_float = core.dispatch_float
 dispatch_int = core.dispatch_int
 get_local_n_nodes = core.get_local_n_nodes
+pre_partition_graph = core.pre_partition_graph
+load_prepart_info = core.load_prepart_info
 
 
 # ops

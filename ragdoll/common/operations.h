@@ -27,6 +27,15 @@ __attribute__((visibility("default"))) void ragdoll_partition_graph(
     int n_nodes, int *xadj, int *adjncy, int *sgn, int **sg_xadj, int **sg_adjncy,
     int mini_n, int *mini_xadj, int *mini_adjncy, int *mini_gid2mid, int *mini_node_weights, int *mini_edge_weights);
 
+__attribute__((visibility("default"))) void ragdoll_pre_partition_graph(
+    int n_peers, int n_nodes, int *xadj, int *adjncy,
+    int mini_n, int *mini_xadj, int *mini_adjncy, int *mini_gid2mid, int *mini_node_weights, int *mini_edge_weights,
+    size_t *prepart_info_bin_size, char **prepart_info_bin_data);
+
+__attribute__((visibility("default"))) void ragdoll_load_prepart_info(
+    int *sgn, int **sg_xadj, int **sg_adjncy,
+    size_t bin_stream_size, char *bin_stream_data);
+
 __attribute__((visibility("default"))) void ragdoll_partition_graph_on_dir(
     const char *dirname, int *sgn, int **sg_xadj, int **sg_adjncy);
 

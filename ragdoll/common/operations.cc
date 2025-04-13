@@ -87,6 +87,22 @@ void RagdollPartitionGraph(int n_nodes, int *xadj, int *adjncy, int *sgn,
                        &global_state.info, sgn, sg_xadj, sg_adjncy, mini_n, mini_xadj, mini_adjncy, mini_gid2mid, mini_node_weights, mini_edge_weights);
 }
 
+void RagdollPrePartitionGraph(int n_peers, int n_nodes, int *xadj, int *adjncy,
+                           int mini_n, int *mini_xadj, int *mini_adjncy, int *mini_gid2mid, int *mini_node_weights, int *mini_edge_weights,
+                           size_t *prepart_info_bin_size, char **prepart_info_bin_data) {
+  gccl::PrePartitionGraph(n_peers, n_nodes, xadj, adjncy,
+                       mini_n, mini_xadj, mini_adjncy, mini_gid2mid, mini_node_weights, mini_edge_weights,
+                       prepart_info_bin_size, prepart_info_bin_data);
+}
+
+void RagdollLoadPrePartInfo(int *sgn, int **sg_xadj, int **sg_adjncy,
+                            size_t bin_stream_size, char *bin_stream_data) {
+  if (global_state.info != nullptr) {
+    gccl::FreeCommInfo(global_state.info);
+  }
+  gccl::PartitionGraphWithPrepartInfo(global_state.comm, &global_state.info, sgn, sg_xadj, sg_adjncy, bin_stream_size, bin_stream_data);
+}
+
 void RagdollPartitionGraphOnDir(const char *dirname, int *sgn, int **sg_xadj,
                                 int **sg_adjncy) {
   if (global_state.info != nullptr) {
@@ -158,6 +174,20 @@ void ragdoll_partition_graph(int n_nodes, int *xadj, int *adjncy, int *sgn,
 void ragdoll_partition_graph_on_dir(const char *dirname, int *sgn,
                                     int **sg_xadj, int **sg_adjncy) {
   RagdollPartitionGraphOnDir(dirname, sgn, sg_xadj, sg_adjncy);
+}
+
+void ragdoll_pre_partition_graph(
+  int n_peers, int n_nodes, int *xadj, int *adjncy,
+  int mini_n, int *mini_xadj, int *mini_adjncy, int *mini_gid2mid, int *mini_node_weights, int *mini_edge_weights,
+  size_t *prepart_info_bin_size, char **prepart_info_bin_data) {
+  RagdollPrePartitionGraph(n_peers, n_nodes, xadj, adjncy,
+                           mini_n, mini_xadj, mini_adjncy, mini_gid2mid, mini_node_weights, mini_edge_weights,
+                           prepart_info_bin_size, prepart_info_bin_data);
+}
+
+void ragdoll_load_prepart_info(int *sgn, int **sg_xadj, int **sg_adjncy,
+  size_t bin_stream_size, char *bin_stream_data) {
+  RagdollLoadPrePartInfo(sgn, sg_xadj, sg_adjncy, bin_stream_size, bin_stream_data);
 }
 
 void ragdoll_graph_detailed_info(int **gid2pid, int **num_local_nodes, int **gid2lid_unordered) {

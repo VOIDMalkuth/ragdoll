@@ -109,6 +109,75 @@ class RagdollCore(object):
         self.lib.ragdoll_release(sg_xadj)
         self.lib.ragdoll_release(sg_adjncy)
         return sg_n.value, py_sg_xadj, py_sg_adjncy
+    
+    def pre_partition_graph(self, n_peers, n_nodes, xadj, adjncy, mini_graph_info=None):
+        start = time.time()
+        if isinstance(xadj, list):
+            c_xadj = (ctypes.c_int * len(xadj))(*xadj)
+            c_adjncy = (ctypes.c_int * len(adjncy))(*adjncy)
+        else:
+            c_xadj = xadj.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
+            c_adjncy = adjncy.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
+        
+        if mini_graph_info is not None:
+            mini_n = mini_graph_info['n']
+            mini_xadj = mini_graph_info['xadj']
+            mini_adjncy = mini_graph_info['adjncy']
+            mini_gid2mid = mini_graph_info['gid2mid']
+            mini_node_weights = mini_graph_info['node_weights']
+            mini_edge_weights = mini_graph_info['edge_weights']
+            c_mini_xadj = mini_xadj.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
+            c_mini_adjncy = mini_adjncy.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
+            c_mini_gid2mid = mini_gid2mid.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
+            c_mini_node_weights = mini_node_weights.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
+            c_mini_edge_weights = mini_edge_weights.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
+        else:
+            mini_n = 0
+            c_mini_xadj = ctypes.POINTER(ctypes.c_int)()
+            c_mini_adjncy = ctypes.POINTER(ctypes.c_int)()
+            c_mini_gid2mid = ctypes.POINTER(ctypes.c_int)()
+            c_mini_node_weights = ctypes.POINTER(ctypes.c_float)()
+            c_mini_edge_weights = ctypes.POINTER(ctypes.c_float)()
+
+        prepart_info_bin_size_c = ctypes.c_size_t()
+        prepart_info_bin_c = ctypes.POINTER(ctypes.c_char)()
+        self.lib.ragdoll_pre_partition_graph(n_peers, n_nodes, c_xadj, c_adjncy, mini_n, c_mini_xadj, c_mini_adjncy, c_mini_gid2mid, c_mini_node_weights, c_mini_edge_weights, ctypes.byref(prepart_info_bin_size_c), ctypes.byref(prepart_info_bin_c))
+        
+        prepart_info_bin = np.ctypeslib.as_array(prepart_info_bin_c, shape=(prepart_info_bin_size_c.value,)).copy()
+        
+        self.lib.ragdoll_release(prepart_info_bin_c)
+        end = time.time()
+        print("Prepartition overall took: {}s".format(end - start))
+        return prepart_info_bin
+
+    # todo: check multithread 250408
+    def load_prepart_info(self, prepart_info_bin=None):
+        sg_n = ctypes.c_int32()
+        sg_xadj = ctypes.POINTER(ctypes.c_int)()
+        sg_adjncy = ctypes.POINTER(ctypes.c_int)()
+        
+        prepart_info_bin_c = ctypes.POINTER(ctypes.c_char)()
+        prepart_info_bin_size_c = ctypes.c_size_t()
+        if prepart_info_bin is not None:
+            prepart_info_bin_c = prepart_info_bin.ctypes.data_as(ctypes.POINTER(ctypes.c_char))
+            prepart_info_bin_size_c = ctypes.c_size_t(len(prepart_info_bin))
+            
+        self.lib.ragdoll_load_prepart_info(
+            ctypes.byref(sg_n), ctypes.byref(sg_xadj), ctypes.byref(sg_adjncy),
+            prepart_info_bin_size_c, prepart_info_bin_c)
+
+        n_edges = sg_xadj[sg_n.value]
+        print('Subgraph nodes:', sg_n.value, 'local nodes',
+              self.lib.ragdoll_get_local_n_nodes(), 'edges:', n_edges)
+        
+        py_sg_xadj = np.ctypeslib.as_array(sg_xadj, shape=(sg_n.value + 1,)).copy()
+        py_sg_adjncy = np.ctypeslib.as_array(sg_adjncy, shape=(n_edges,)).copy()
+        
+        print("Finished converting to numpy")
+        
+        self.lib.ragdoll_release(sg_xadj)
+        self.lib.ragdoll_release(sg_adjncy)
+        return sg_n.value, py_sg_xadj, py_sg_adjncy
 
     def partition_graph_on_dir(self, dirname):
         sg_n = ctypes.c_int32()
